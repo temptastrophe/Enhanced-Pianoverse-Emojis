@@ -118,7 +118,7 @@
         });
 
         var popup = document.createElement('div');
-        popup.style.cssText = 'position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);width:240px;background:rgba(20,20,20,0.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px;display:none;flex-direction:column;gap:8px;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,0.4);';
+        popup.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:260px;background:rgba(20,20,20,0.97);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:14px;display:none;flex-direction:column;gap:8px;z-index:99999;box-shadow:0 12px 40px rgba(0,0,0,0.5);';
 
         var title = document.createElement('div');
         title.textContent = 'Custom Emojis';
@@ -151,7 +151,7 @@
         status.style.cssText = 'font-size:11px;opacity:0.6;min-height:14px;text-align:center;';
 
         var listWrap = document.createElement('div');
-        listWrap.style.cssText = 'display:flex;flex-wrap:wrap;justify-content:center;max-height:120px;overflow-y:auto;gap:2px;margin:4px 0;';
+        listWrap.style.cssText = 'display:flex;flex-wrap:wrap;justify-content:center;max-height:140px;overflow-y:auto;gap:2px;margin:4px 0;';
 
         var clearBtn = document.createElement('button');
         clearBtn.textContent = 'Delete All Custom';
@@ -172,8 +172,8 @@
         popup.appendChild(clearBtn);
         popup.appendChild(foot);
 
-        plusBtn.style.position = 'relative';
-        plusBtn.appendChild(popup);
+        // put popup on body so fixed positioning works cleanly
+        document.body.appendChild(popup);
 
         function refreshList() {
             listWrap.innerHTML = '';
@@ -211,7 +211,7 @@
         });
 
         plusBtn.addEventListener('click', function(e) {
-            if (e.target.closest('div') && e.target !== plusBtn) return;
+            e.stopPropagation();
             open = !open;
             popup.style.display = open ? 'flex' : 'none';
             setOpacity();
@@ -219,7 +219,7 @@
         });
 
         document.addEventListener('click', function(e) {
-            if (open && !plusBtn.contains(e.target)) {
+            if (open && !popup.contains(e.target) && e.target !== plusBtn) {
                 open = false;
                 popup.style.display = 'none';
                 setOpacity();
