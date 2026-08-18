@@ -16,143 +16,45 @@
         localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
     }
 
-    function addEmoji(emoji, container) {
+    function insertEmojiText(emoji) {
+        var input = document.querySelector('body > div > div.chat > pv-chat > div > input');
+        if (!input) return;
+
+        var text = '<' + (emoji.animated ? 'a' : '') + ':' + emoji.name + ':' + emoji.id + '>';
+        var pos = input.selectionStart;
+        input.value = input.value.slice(0, pos) + text + input.value.slice(pos);
+        var newPos = pos + text.length;
+        input.setSelectionRange(newPos, newPos);
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    function makeEmojiEl(emoji) {
         var el = document.createElement('div');
         el.className = 'emoji';
         el.dataset.name = emoji.name;
         el.dataset.id = emoji.id;
         el.dataset.animated = emoji.animated;
+        el.style.cssText = 'position:relative;width:2.5rem;height:2.5rem;border-radius:0.7rem;overflow:hidden;cursor:pointer;display:inline-block;margin:4px;';
 
         var bg = document.createElement('div');
+        bg.style.cssText = 'position:absolute;inset:0;background-size:cover;background-position:center;opacity:0.3;';
         bg.style.backgroundImage = 'url(' + emoji.url + ')';
 
         var img = document.createElement('img');
         img.src = emoji.url + (emoji.animated ? '?animated=true' : '');
+        img.style.cssText = 'position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:1.8rem;height:1.8rem;border-radius:0.5rem;';
 
         el.appendChild(bg);
         el.appendChild(img);
 
         el.addEventListener('click', function() {
-            var input = document.querySelector('body > div > div.chat > pv-chat > div > input');
-            if (!input) return;
-
-            var text = '<' + (emoji.animated ? 'a' : '') + ':' + emoji.name + ':' + emoji.id + '>';
-            var pos = input.selectionStart;
-            input.value = input.value.slice(0, pos) + text + input.value.slice(pos);
-            var newPos = pos + text.length;
-            input.setSelectionRange(newPos, newPos);
-            input.dispatchEvent(new Event('input', { bubbles: true }));
+            insertEmojiText(emoji);
         });
 
-        container.appendChild(el);
+        return el;
     }
 
-    function addCustomEmojiControls(popup, container) {
-        var wrap = document.createElement('div');
-        wrap.style.padding = '10px';
-        wrap.style.borderTop = '1px solid rgba(255,255,255,0.08)';
-        wrap.style.display = 'flex';
-        wrap.style.flexDirection = 'column';
-        wrap.style.gap = '6px';
-
-        var title = document.createElement('div');
-        title.textContent = 'Custom Emojis';
-        title.style.fontSize = '13px';
-        title.style.fontWeight = '600';
-        title.style.marginBottom = '2px';
-
-        var nameInput = document.createElement('input');
-        nameInput.placeholder = 'Emoji name';
-
-        var idInput = document.createElement('input');
-        idInput.placeholder = 'Emoji ID';
-
-        var urlInput = document.createElement('input');
-        urlInput.placeholder = 'Emoji URL';
-
-        var animLabel = document.createElement('label');
-        animLabel.style.display = 'flex';
-        animLabel.style.alignItems = 'center';
-        animLabel.style.gap = '6px';
-        animLabel.style.fontSize = '12px';
-        animLabel.style.cursor = 'pointer';
-
-        var animCheck = document.createElement('input');
-        animCheck.type = 'checkbox';
-        animLabel.appendChild(animCheck);
-        animLabel.appendChild(document.createTextNode('Animated'));
-
-        var addBtn = document.createElement('button');
-        addBtn.textContent = 'Add Emoji';
-
-        var status = document.createElement('div');
-        status.style.fontSize = '11px';
-        status.style.opacity = '0.6';
-        status.style.minHeight = '14px';
-
-        addBtn.addEventListener('click', function() {
-            var n = nameInput.value.trim();
-            var i = idInput.value.trim();
-            var u = urlInput.value.trim();
-
-            if (!n || !i || !u) {
-                status.textContent = 'Please fill in every field';
-                return;
-            }
-
-            var emoji = {
-                name: n,
-                id: i,
-                url: u,
-                animated: animCheck.checked
-            };
-
-            var list = getCustomEmojis();
-            list.push(emoji);
-            saveCustomEmojis(list);
-            addEmoji(emoji, container);
-
-            nameInput.value = '';
-            idInput.value = '';
-            urlInput.value = '';
-            animCheck.checked = false;
-            status.textContent = 'Emoji saved';
-        });
-
-        var clearBtn = document.createElement('button');
-        clearBtn.textContent = 'Delete Custom Emojis';
-        clearBtn.addEventListener('click', function() {
-            if (!confirm('Delete all custom emojis?')) return;
-            localStorage.removeItem(STORAGE_KEY);
-            container.innerHTML = '';
-            status.textContent = 'Custom emojis deleted';
-        });
-
-        wrap.appendChild(title);
-        wrap.appendChild(nameInput);
-        wrap.appendChild(idInput);
-        wrap.appendChild(urlInput);
-        wrap.appendChild(animLabel);
-        wrap.appendChild(addBtn);
-        wrap.appendChild(clearBtn);
-        wrap.appendChild(status);
-        popup.appendChild(wrap);
-    }
-
-    function addFooter(popup) {
-        var foot = document.createElement('div');
-        foot.textContent = 'Enhanced by Temptastrophe\nOriginally made by Enzoenbrrr';
-        foot.style.padding = '10px';
-        foot.style.textAlign = 'center';
-        foot.style.fontSize = '10px';
-        foot.style.lineHeight = '1.5';
-        foot.style.opacity = '0.45';
-        foot.style.borderTop = '1px solid rgba(255,255,255,0.08)';
-        foot.style.whiteSpace = 'pre-line';
-        popup.appendChild(foot);
-    }
-
-    // button + toggle
+    // original face button
     (function() {
         var btn = document.createElement('i');
         btn.classList.add('fa-solid', 'fa-face-laugh');
@@ -162,11 +64,7 @@
         btn.style.cssText = 'display:flex;align-items:center;justify-content:center;margin-right:max(0.7vw,8px);cursor:url(/assets/pointer-BCNK29s4.cur),auto;opacity:0.4;transition:opacity 0.15s ease;user-select:none;-webkit-user-select:none;';
 
         function setOpacity() {
-            if (open) {
-                btn.style.opacity = '1';
-            } else {
-                btn.style.opacity = (btn.dataset.hovering === 'true') ? '1' : '0.4';
-            }
+            btn.style.opacity = open || btn.dataset.hovering === 'true' ? '1' : '0.4';
         }
 
         btn.addEventListener('mouseenter', function() {
@@ -180,14 +78,11 @@
 
         btn.addEventListener('click', function(e) {
             if (e.target.closest('.popup-root')) return;
-
             open = !open;
             btn.classList.toggle('fa-xmark', open);
             btn.classList.toggle('fa-face-laugh', !open);
-
             var popup = btn.querySelector('.popup-root');
-            if (!popup) return;
-            popup.style.display = open ? 'flex' : 'none';
+            if (popup) popup.style.display = open ? 'flex' : 'none';
             setOpacity();
         });
 
@@ -199,7 +94,150 @@
         chatBar.insertBefore(btn, chatBar.firstChild);
     })();
 
-    // load everything
+    // the + button for customs
+    (function() {
+        var plusBtn = document.createElement('i');
+        plusBtn.classList.add('fa-solid', 'fa-plus');
+        plusBtn.title = 'Custom Emojis';
+
+        var open = false;
+
+        plusBtn.style.cssText = 'display:flex;align-items:center;justify-content:center;margin-right:max(0.5vw,6px);cursor:url(/assets/pointer-BCNK29s4.cur),auto;opacity:0.4;transition:opacity 0.15s ease;user-select:none;-webkit-user-select:none;font-size:0.95em;';
+
+        function setOpacity() {
+            plusBtn.style.opacity = open || plusBtn.dataset.hovering === 'true' ? '1' : '0.4';
+        }
+
+        plusBtn.addEventListener('mouseenter', function() {
+            plusBtn.dataset.hovering = 'true';
+            setOpacity();
+        });
+        plusBtn.addEventListener('mouseleave', function() {
+            plusBtn.dataset.hovering = 'false';
+            setOpacity();
+        });
+
+        var popup = document.createElement('div');
+        popup.style.cssText = 'position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);width:240px;background:rgba(20,20,20,0.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px;display:none;flex-direction:column;gap:8px;z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,0.4);';
+
+        var title = document.createElement('div');
+        title.textContent = 'Custom Emojis';
+        title.style.cssText = 'font-size:13px;font-weight:600;text-align:center;margin-bottom:4px;';
+
+        var nameInput = document.createElement('input');
+        nameInput.placeholder = 'Emoji name';
+        nameInput.style.cssText = 'width:100%;padding:6px 8px;border-radius:6px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.08);color:#fff;font-size:12px;box-sizing:border-box;';
+
+        var idInput = document.createElement('input');
+        idInput.placeholder = 'Emoji ID';
+        idInput.style.cssText = nameInput.style.cssText;
+
+        var urlInput = document.createElement('input');
+        urlInput.placeholder = 'Emoji URL';
+        urlInput.style.cssText = nameInput.style.cssText;
+
+        var animLabel = document.createElement('label');
+        animLabel.style.cssText = 'display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;user-select:none;';
+        var animCheck = document.createElement('input');
+        animCheck.type = 'checkbox';
+        animLabel.appendChild(animCheck);
+        animLabel.appendChild(document.createTextNode('Animated'));
+
+        var addBtn = document.createElement('button');
+        addBtn.textContent = 'Add Emoji';
+        addBtn.style.cssText = 'padding:7px;border:none;border-radius:6px;background:rgba(255,255,255,0.12);color:#fff;font-size:12px;cursor:pointer;';
+
+        var status = document.createElement('div');
+        status.style.cssText = 'font-size:11px;opacity:0.6;min-height:14px;text-align:center;';
+
+        var listWrap = document.createElement('div');
+        listWrap.style.cssText = 'display:flex;flex-wrap:wrap;justify-content:center;max-height:120px;overflow-y:auto;gap:2px;margin:4px 0;';
+
+        var clearBtn = document.createElement('button');
+        clearBtn.textContent = 'Delete All Custom';
+        clearBtn.style.cssText = 'padding:6px;border:none;border-radius:6px;background:rgba(180,40,40,0.3);color:#fff;font-size:11px;cursor:pointer;';
+
+        var foot = document.createElement('div');
+        foot.textContent = 'Enhanced by Temptastrophe\nOriginally made by Enzoenbrrr';
+        foot.style.cssText = 'font-size:9px;opacity:0.4;text-align:center;line-height:1.4;white-space:pre-line;margin-top:4px;';
+
+        popup.appendChild(title);
+        popup.appendChild(nameInput);
+        popup.appendChild(idInput);
+        popup.appendChild(urlInput);
+        popup.appendChild(animLabel);
+        popup.appendChild(addBtn);
+        popup.appendChild(status);
+        popup.appendChild(listWrap);
+        popup.appendChild(clearBtn);
+        popup.appendChild(foot);
+
+        plusBtn.style.position = 'relative';
+        plusBtn.appendChild(popup);
+
+        function refreshList() {
+            listWrap.innerHTML = '';
+            var list = getCustomEmojis();
+            for (var i = 0; i < list.length; i++) {
+                listWrap.appendChild(makeEmojiEl(list[i]));
+            }
+        }
+
+        addBtn.addEventListener('click', function() {
+            var n = nameInput.value.trim();
+            var i = idInput.value.trim();
+            var u = urlInput.value.trim();
+            if (!n || !i || !u) {
+                status.textContent = 'Fill every field';
+                return;
+            }
+            var emoji = { name: n, id: i, url: u, animated: animCheck.checked };
+            var list = getCustomEmojis();
+            list.push(emoji);
+            saveCustomEmojis(list);
+            refreshList();
+            nameInput.value = '';
+            idInput.value = '';
+            urlInput.value = '';
+            animCheck.checked = false;
+            status.textContent = 'Saved';
+        });
+
+        clearBtn.addEventListener('click', function() {
+            if (!confirm('Delete all custom emojis?')) return;
+            localStorage.removeItem(STORAGE_KEY);
+            refreshList();
+            status.textContent = 'Cleared';
+        });
+
+        plusBtn.addEventListener('click', function(e) {
+            if (e.target.closest('div') && e.target !== plusBtn) return;
+            open = !open;
+            popup.style.display = open ? 'flex' : 'none';
+            setOpacity();
+            if (open) refreshList();
+        });
+
+        document.addEventListener('click', function(e) {
+            if (open && !plusBtn.contains(e.target)) {
+                open = false;
+                popup.style.display = 'none';
+                setOpacity();
+            }
+        });
+
+        var chatBar = document.querySelector('body > div > div.chat > pv-chat > div');
+        if (!chatBar) return;
+
+        var faceBtn = chatBar.querySelector('i.fa-face-laugh');
+        if (faceBtn) {
+            chatBar.insertBefore(plusBtn, faceBtn.nextSibling);
+        } else {
+            chatBar.insertBefore(plusBtn, chatBar.firstChild);
+        }
+    })();
+
+    // load original picker
     (async function() {
         var btn = document.querySelector('i.fa-face-laugh');
         if (!btn) {
@@ -224,27 +262,30 @@
                 var catEl = document.getElementById(cat);
                 if (!catEl) continue;
                 for (var j = 0; j < emojis[cat].length; j++) {
-                    addEmoji(emojis[cat][j], catEl);
+                    var emoji = emojis[cat][j];
+                    var el = document.createElement('div');
+                    el.className = 'emoji';
+                    el.dataset.name = emoji.name;
+                    el.dataset.id = emoji.id;
+                    el.dataset.animated = emoji.animated;
+
+                    var bg = document.createElement('div');
+                    bg.style.backgroundImage = 'url(' + emoji.url + ')';
+
+                    var img = document.createElement('img');
+                    img.src = emoji.url + (emoji.animated ? '?animated=true' : '');
+
+                    el.appendChild(bg);
+                    el.appendChild(img);
+
+                    el.addEventListener('click', function(em) {
+                        return function() {
+                            insertEmojiText(em);
+                        };
+                    }(emoji));
+
+                    catEl.appendChild(el);
                 }
-            }
-
-            var customCat = document.getElementById('custom');
-            if (!customCat) {
-                customCat = document.createElement('div');
-                customCat.id = 'custom';
-                customCat.classList.add('emoji-category');
-                btn.appendChild(customCat);
-            }
-
-            var customs = getCustomEmojis();
-            for (var k = 0; k < customs.length; k++) {
-                addEmoji(customs[k], customCat);
-            }
-
-            var popup = btn.querySelector('.popup-root');
-            if (popup) {
-                addCustomEmojiControls(popup, customCat);
-                addFooter(popup);
             }
         } catch (err) {
             console.error('Error loading emojis:', err);
