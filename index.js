@@ -122,7 +122,7 @@
 
         var title = document.createElement('div');
         title.textContent = 'Custom Emojis';
-        title.style.cssText = 'font-size:13px;font-weight:600;text-align:center;margin-bottom:4px;';
+        title.style.cssText = 'font-size:13px;font-weight:600;text-align:center;margin-bottom:4px;cursor:move;user-select:none;';
 
         var nameInput = document.createElement('input');
         nameInput.placeholder = 'Emoji name';
@@ -172,8 +172,39 @@
         popup.appendChild(clearBtn);
         popup.appendChild(foot);
 
-        // put popup on body so fixed positioning works cleanly
         document.body.appendChild(popup);
+
+        // drag stuff
+        var dragging = false;
+        var startX, startY, startLeft, startTop;
+
+        title.addEventListener('mousedown', function(e) {
+            e.preventDefault();
+            dragging = true;
+
+            // switch from centered transform to explicit left/top
+            var rect = popup.getBoundingClientRect();
+            popup.style.transform = 'none';
+            popup.style.left = rect.left + 'px';
+            popup.style.top = rect.top + 'px';
+
+            startX = e.clientX;
+            startY = e.clientY;
+            startLeft = rect.left;
+            startTop = rect.top;
+        });
+
+        document.addEventListener('mousemove', function(e) {
+            if (!dragging) return;
+            var dx = e.clientX - startX;
+            var dy = e.clientY - startY;
+            popup.style.left = (startLeft + dx) + 'px';
+            popup.style.top = (startTop + dy) + 'px';
+        });
+
+        document.addEventListener('mouseup', function() {
+            dragging = false;
+        });
 
         function refreshList() {
             listWrap.innerHTML = '';
